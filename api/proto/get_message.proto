@@ -1,0 +1,13 @@
+syntax = "proto3";
+package generated;
+
+option go_package = "protogenerated/messages";
+
+message GetRequest {
+  string key = 1;
+  int64 n = 2;
+}
+
+message GetResponse {
+  repeated bytes messages = 1;
+}

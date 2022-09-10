@@ -1,2 +1,2 @@
-jellystore/test_path/*
+pkg/jellystore/test_path/*
 .idea/*

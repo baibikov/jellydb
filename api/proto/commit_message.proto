@@ -1,0 +1,9 @@
+syntax = "proto3";
+package generated;
+
+option go_package = "protogenerated/messages";
+
+message CommitRequest {
+  string key = 1;
+  int64 n = 2;
+}
