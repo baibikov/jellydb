@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/baibikov/jellydb/pkg/jellystore"
+	"github.com/baibikov/jellydb/internal/pkg/jellystore"
 	"github.com/baibikov/jellydb/pkg/protomarshal"
 	"github.com/baibikov/jellydb/protogenerated/messages"
 )

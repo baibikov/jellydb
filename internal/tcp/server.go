@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/baibikov/jellydb/pkg/jellystore"
+	"github.com/baibikov/jellydb/internal/pkg/jellystore"
 )
 
 type Server struct {
