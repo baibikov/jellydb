@@ -5,12 +5,12 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/baibikov/jellydb/internal/pkg/jellystore"
+	"github.com/baibikov/jellydb/internal/pkg/jell"
 )
 
 type Server struct {
 	listener net.Listener
-	store    *jellystore.Store
+	jelly    jell.Jelly
 	closed   bool
 }
 
@@ -27,7 +27,7 @@ type Config struct {
 	Addr string
 }
 
-func New(config *Config, store *jellystore.Store) (*Server, error) {
+func New(config *Config, jelly jell.Jelly) (*Server, error) {
 	if config == nil {
 		return nil, errors.New("config has not be empty")
 	}
@@ -43,6 +43,6 @@ func New(config *Config, store *jellystore.Store) (*Server, error) {
 
 	return &Server{
 		listener: listener,
-		store:    store,
+		jelly:    jelly,
 	}, nil
 }
