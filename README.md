@@ -54,39 +54,35 @@ take the next 4 bytes - the offset of the comic messages
 
 ### Quick Start:
 
+#### Run tcp server on current port
 ```bash
-go get github.com/baibikov/jellydb
+go run cmd/tcp/main.go -addr :7777
 ```
-Code:
 
-```go
-package main
+#### Run CLI 
+```bash
+go run cmd/cli/main.go -addr :7777
+```
 
-import (
-	"fmt"
-	"log"
+#### Commands for use
+```
+(sys)
+-help:  Navigating existing Commands
+exit:  Exit from CLI
+clear: Carriage cleaning
 
-	"github.com/baibikov/jellydb/jellystore"
-)
+(store)
+SET: Adding an entry to the read queue, as soon as the entry
+example:
+> SET my_super_important SOME_VALUE_1
 
-func main() {
-	store, err := jellystore.New(&jellystore.Config{
-		Path: "YOU_STORE_PATH",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+GET [N]: Getting uncommitted messages from the batch queue and n is batch elements
+example:
+> GET my_super_important 2
+> SOME_VALUE_1
+> SOME_VALUE_2
 
-	err = store.Set("key", []byte("some_message"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bb, err := store.Get("key", 1)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(bb)
-}
+COM [N]: Commenting on a batch of messages
+example:
+> COMMIT my_super_important 2
 ```
