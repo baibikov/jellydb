@@ -25,21 +25,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Load - loading all parameters/data from storage.
-// Loading data is necessary for fault-tolerant operation of in-memory storage.
-// Loading occurs through the directory specified in the config,
-// upon completion of the context, there is a possibility that
-// not all data can be included in the storage.
-// For example:
-//  err := storage.Load(ctx)
-//  if err != nil {
-//      log.Fatal(err)
-//  }
-//  bb, err := storage.Get("some-key", 1)
-//  if err != nil {
-//      log.Fatal(err)
-//  }
-//  fmt.Println(bb) // bytes by key: "some-key"
 func (s *Store) Load(ctx context.Context) error {
 	return s.load(ctx)
 }

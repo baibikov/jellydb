@@ -10,9 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.uber.org/multierr"
 
+	"github.com/baibikov/jellydb/internal/pkg/jellystore"
 	"github.com/baibikov/jellydb/internal/tcp"
-	"github.com/baibikov/jellydb/pkg/jellystore"
 )
+
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+}
 
 func main() {
 	flags, err := parse()

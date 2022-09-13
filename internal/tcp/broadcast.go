@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/baibikov/jellydb/pkg/jellystore"
+	"github.com/baibikov/jellydb/internal/pkg/jell"
 	"github.com/baibikov/jellydb/pkg/protomarshal"
 	"github.com/baibikov/jellydb/protogenerated/messages"
 )
@@ -23,6 +23,7 @@ func (s *Server) Broadcast(ctx context.Context) error {
 		default:
 			conn, err := s.listener.Accept()
 			if s.closed {
+				// not error because client has closed
 				return nil
 			}
 			if err != nil {
@@ -30,7 +31,7 @@ func (s *Server) Broadcast(ctx context.Context) error {
 			}
 
 			go func() {
-				if err := newhandler(conn, s.store).do(ctx); err != nil {
+				if err := newhandler(conn, s.jelly).do(ctx); err != nil {
 					logrus.Error(err)
 				}
 			}()
@@ -40,19 +41,19 @@ func (s *Server) Broadcast(ctx context.Context) error {
 
 type handler struct {
 	conn  net.Conn
-	store *jellystore.Store
+	jelly jell.Jelly
 }
 
-func newhandler(conn net.Conn, store *jellystore.Store) *handler {
-	return &handler{conn: conn, store: store}
+func newhandler(conn net.Conn, jelly jell.Jelly) *handler {
+	return &handler{conn: conn, jelly: jelly}
 }
 
 const (
 	pingMessageSize = 1
 
-	setMessageSize    = 128
-	getMessageSize    = 128
-	commitMessageSize = 128
+	setMessageSize    = 256
+	getMessageSize    = 256
+	commitMessageSize = 256
 )
 
 const (
@@ -61,40 +62,48 @@ const (
 	commitMessageType
 )
 
-func (h *handler) do(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return nil
-	default:
-	}
-	defer tryClose(h.conn, "do")
+func (h *handler) do(ctx context.Context) (err error) {
+	defer func() {
+		tryClose(h.conn, err, "do")
+	}()
 
-	bb := make([]byte, pingMessageSize)
-	n, err := h.conn.Read(bb)
-	if err != nil {
-		return errors.Wrap(err, "read ping message")
-	}
-	if n == 0 {
-		return errors.New("ping message empty")
-	}
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+		}
 
-	i, err := strconv.Atoi(string(bb))
-	if err != nil {
-		return errors.Wrapf(err, "string unfolding - %s", string(bb))
-	}
+		bb := make([]byte, pingMessageSize)
+		n, err := h.conn.Read(bb)
+		if err != nil {
+			return errors.Wrap(err, "read ping message")
+		}
+		if n == 0 {
+			return errors.New("ping message empty")
+		}
 
-	switch i {
-	case setMessageType:
-		err = h.set(ctx)
-	case getMessageType:
-		err = h.get(ctx)
-	case commitMessageType:
-		err = h.commit(ctx)
-	default:
-		return errors.Errorf("undefined message type - %d", i)
-	}
+		typ, err := strconv.Atoi(string(bb))
+		if err != nil {
+			return errors.Wrapf(err, "string unfolding - %s", string(bb))
+		}
 
-	return err
+		logrus.Debugf("processing message by type - %d", typ)
+
+		switch typ {
+		case setMessageType:
+			err = h.set()
+		case getMessageType:
+			err = h.get()
+		case commitMessageType:
+			err = h.commit()
+		default:
+			return errors.Errorf("undefined message type - %d", typ)
+		}
+		if err != nil {
+			logrus.Error(err)
+		}
+	}
 }
 
 const (
@@ -102,20 +111,13 @@ const (
 	StatusCodeBad = 50
 )
 
-func tryClose(conn net.Conn, space string) {
+func tryClose(conn net.Conn, err error, space string) {
 	if v := recover(); v != any(nil) {
 		logrus.Errorf("space %s rec error: %+v", space, v)
 	}
 
-	err := conn.Close()
-	if err != nil {
-		logrus.Error(space, err)
-	}
-}
-
-func tryError(err error, space string) {
-	if err != nil {
-		err = errors.Wrap(err, space)
+	if err := conn.Close(); err != nil {
+		logrus.Error(err)
 	}
 }
 
@@ -131,9 +133,8 @@ func wrapMessageResponse(conn net.Conn, err error) error {
 		code = StatusCodeBad
 	}
 
-	err = protomarshal.NewDecoder(conn).Decode(&messages.Response{
+	return protomarshal.NewDecoder(conn).Decode(&messages.Response{
 		Error: message,
 		Code:  int32(code),
 	})
-	return err
 }
