@@ -22,7 +22,7 @@ func (e *Encoder) Encode(m proto.Message) error {
 		return errors.New("empty message from reader")
 	}
 
-	return errors.Wrapf(proto.Unmarshal(bb, m), "encode message by proto with size %d", e.size)
+	return errors.Wrapf(proto.Unmarshal(bb[:n], m), "encode message by proto with size %d", e.size)
 }
 
 func NewEncoder(reader io.Reader, size int) *Encoder { return &Encoder{r: reader, size: size} }
@@ -41,7 +41,7 @@ func (d *Decoder) Decode(m proto.Message) error {
 		return errors.Wrap(err, "write message by writer")
 	}
 	if n == 0 {
-		return errors.New("empty message from writer")
+		return errors.New("empty message write")
 	}
 
 	return nil
