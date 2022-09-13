@@ -1,4 +1,7 @@
 # Jellydb in-memory NoSQL message database.
+[![PkgGoDev](https://img.shields.io/badge/go.dev-docs-007d9c?style=flat-square&logo=go&logoColor=white)](https://pkg.go.dev/github.com/baibikov/jellydb)
+[![GitHub release](https://img.shields.io/github/release/baibikov/jellyfish.svg?style=flat-square)](https://https://github.com/baibikov/jellydb/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/baibikov/jellydb)](https://goreportcard.com/report/github.com/baibikov/jellydb)
 
 ### Philosophy:
 -----------
