@@ -23,11 +23,6 @@ import (
 	"github.com/baibikov/jellydb/pkg/utils"
 )
 
-// Unload - uploading data, allows you to upload all data for all
-// keys to the directory specified in the config
-// to protect data from unexpected drops.
-// At the end of the context, there is a possibility
-// that not all data will be thrown into the storage
 func (s *Store) Unload(ctx context.Context) error {
 	return s.unload(ctx)
 }

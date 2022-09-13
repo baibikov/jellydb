@@ -40,16 +40,6 @@ func New(config *Config) (*Store, error) {
 	}, nil
 }
 
-// Get getting uncommitted messages from the batch queue
-// the key must be initialized as part of getting data
-// n - parameter must be positive.
-// For example get batch 10 messages after committed (if exists):
-//
-// 	bb, err := store.Get("some-key", 10)
-// 	if err != nil {
-// 	    log.Fatal(err)
-// 	}
-// 	fmt.Println(bb)
 func (s *Store) Get(key string, n int64) ([][]byte, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -62,16 +52,6 @@ func (s *Store) Get(key string, n int64) ([][]byte, error) {
 	return v.batch(n), nil
 }
 
-// Commit commenting on a batch of messages, messages will be
-// defined as read (which means commented out).
-// Messages will not be displayed during the data retrieval phase.
-// n - parameter must be positive.
-// For example comment 10 messages (if exists):
-//
-//	err := store.Get("some-key")
-//  if err != nil {
-//      log.Fatal(err)
-//  }
 func (s *Store) Commit(key string, n int64) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -85,15 +65,6 @@ func (s *Store) Commit(key string, n int64) error {
 	return nil
 }
 
-// Set adding an entry to the read queue, as soon as the entry
-// occurs, it will be possible to receive this data
-// value has not been nil or len(value) == 0
-// For example:
-//
-//  err := store.Set("some-key", []byte("some-value"))
-//  if err != nil {
-//      log.Fatal(err)
-//  }
 func (s *Store) Set(key string, value []byte) error {
 	if len(value) == 0 {
 		return nil
