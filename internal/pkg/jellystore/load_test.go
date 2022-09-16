@@ -22,6 +22,8 @@ import (
 )
 
 func TestStore_Load(t *testing.T) {
+	makeTestPath(t)
+
 	tests := []struct {
 		Name   string
 		Key    string

@@ -17,6 +17,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/baibikov/jellydb/pkg/utils"
 )
 
 const testPath = "./test_path"
@@ -26,6 +28,8 @@ var testConfig = &Config{
 }
 
 func TestStore_Commit(t *testing.T) {
+	makeTestPath(t)
+
 	tests := []struct {
 		Name      string
 		Batch     [][]byte
@@ -467,4 +471,9 @@ func TestStore_Get(t *testing.T) {
 		})
 	}
 
+}
+
+func makeTestPath(t *testing.T) {
+	err := utils.CreateFileIfNotExists("test_path")
+	require.NoError(t, err)
 }
