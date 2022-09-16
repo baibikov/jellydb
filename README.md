@@ -1,7 +1,7 @@
 # Jellydb in-memory NoSQL message database.
 [![PkgGoDev](https://img.shields.io/badge/go.dev-docs-007d9c?style=flat-square&logo=go&logoColor=white)](https://pkg.go.dev/github.com/baibikov/jellydb)
 [![GitHub release](https://img.shields.io/github/release/baibikov/jellyfish.svg?style=flat-square)](https://https://github.com/baibikov/jellydb/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/baibikov/jellydb)](https://goreportcard.com/report/github.com/baibikov/jellydb)
+[![Go Report Card](https://goreportcard.com/badge/github.com/baibikov/jellydb?style=flat-square)](https://goreportcard.com/report/github.com/baibikov/jellydb)
 [![Build Status](https://img.shields.io/github/workflow/status/baibikov/jellydb/Go?logo=github&style=flat-square)](https://github.com/baibikov/jellydb/actions?query=workflow)
 ### Philosophy:
 -----------
@@ -88,4 +88,28 @@ example:
 COM [N]: Commenting on a batch of messages
 example:
 > COMMIT my_super_important 2
+```
+
+#### SET command:
+```bash
+> SET my_key_1 object_1
+👌
+> SET my_key_1 object_2
+👌
+> SET my_key_1 object_3
+👌
+```
+
+#### GET command:
+```bash
+> GET my_key_1 3
+object_1
+object_2
+object_3
+```
+
+#### COM (commit) command:
+```bash
+> COM my_key_1 3
+👌
 ```
