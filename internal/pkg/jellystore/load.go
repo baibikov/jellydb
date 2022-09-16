@@ -80,6 +80,7 @@ func (s *Store) loadByFile(key string) (err error) {
 		return nil
 	}
 
+	// usable path by db data
 	pdata := fmt.Sprintf("%s/%s/%s", s.config.Path, key, logFileName)
 
 	metaInfo, err := openMeta(fmt.Sprintf("%s/%s/%s", s.config.Path, key, metaFileName))
@@ -121,10 +122,15 @@ func (s *Store) loadByFile(key string) (err error) {
 		}
 
 		length := binary.LittleEndian.Uint32(bb[:messageLen])
+		if messageLen+length > uint32(len(bb)) {
+			return errors.New("message slice mismatch for load")
+		}
+
 		err = s.Set(key, bb[messageLen:messageLen+length])
 		if err != nil {
 			return errors.Wrapf(err, "set memorry by key %s from path %s", key, pdata)
 		}
+
 		iteration += messageLen + maxMessageSize
 	}
 
