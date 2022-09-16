@@ -2,7 +2,7 @@
 [![PkgGoDev](https://img.shields.io/badge/go.dev-docs-007d9c?style=flat-square&logo=go&logoColor=white)](https://pkg.go.dev/github.com/baibikov/jellydb)
 [![GitHub release](https://img.shields.io/github/release/baibikov/jellyfish.svg?style=flat-square)](https://https://github.com/baibikov/jellydb/releases/latest)
 [![Go Report Card](https://goreportcard.com/badge/github.com/baibikov/jellydb)](https://goreportcard.com/report/github.com/baibikov/jellydb)
-[![Build Status](https://img.shields.io/github/workflow/status/baibikov/jellydb/ci?label=ci&logo=github&style=flat-square)](https://github.com/baibikov/jellydb/actions?query=workflow)
+[![Build Status](https://img.shields.io/github/workflow/status/baibikov/jellydb/Go?logo=github&style=flat-square)](https://github.com/baibikov/jellydb/actions?query=workflow)
 ### Philosophy:
 -----------
 In-memory Database with the ability to upload / download data from file storage.
