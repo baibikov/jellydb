@@ -28,13 +28,24 @@ func (s *Store) Unload(ctx context.Context) error {
 }
 
 func (s *Store) unload(ctx context.Context) error {
-	for key, v := range s.mpstate {
+	messages := make(map[string]*message, len(s.mpstate))
+
+	// try map use for parallel requests
+	s.mutex.Lock()
+	for k, v := range s.mpstate {
+		messages[k] = v
+	}
+	s.mutex.Unlock()
+
+	// iterate over all message values that
+	// are present and load only unloaded messages
+	for key, v := range messages {
 		select {
 		case <-ctx.Done():
 			return errors.New("failed to upload all file data")
 		default:
 			if err := s.unloadByFile(key, v); err != nil {
-				return errors.Wrapf(err, "by key - %s", key)
+				return errors.Wrapf(err, "unload by key - %s", key)
 			}
 		}
 	}
@@ -50,7 +61,7 @@ func (s *Store) unloadByFile(key string, m *message) (err error) {
 	dirPath := fmt.Sprintf("%s/%s", s.config.Path, key)
 	err = utils.CreateFileIfNotExists(dirPath)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "creating file")
 	}
 
 	metaInfo, err := openMeta(fmt.Sprintf("%s/%s", dirPath, metaFileName))
@@ -75,18 +86,20 @@ func (s *Store) unloadByFile(key string, m *message) (err error) {
 	}
 	defer multierr.AppendInvoke(&err, multierr.Close(logInfo))
 
+	// convert the committed messages to the final offset
 	newCommittedOffset := m.committedOffset
 	for i := m.committedIndex; i < m.lastCommitIndex; i++ {
 		newCommittedOffset += maxMessageSize + messageLen
 	}
 
+	// convert the written messages to the final offset
 	newWrittenOffset := m.writtenOffset
 	for i := m.writtenIndex; i < m.len(); i++ {
 		newWrittenOffset += maxMessageSize + messageLen
 
 		err = logInfo.write(m.queue[i])
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "write message by offset %d", newWrittenOffset)
 		}
 	}
 
@@ -100,16 +113,14 @@ func (s *Store) unloadByFile(key string, m *message) (err error) {
 		return err
 	}
 
+	m.writtenOffset = newWrittenOffset
 	if writtenOffset.int64() > newWrittenOffset {
 		m.writtenOffset = writtenOffset.int64()
-	} else {
-		m.writtenOffset = newWrittenOffset
 	}
 
+	m.committedOffset = newCommittedOffset
 	if committedOffset.int64() > newCommittedOffset {
 		m.committedOffset = committedOffset.int64()
-	} else {
-		m.committedOffset = newCommittedOffset
 	}
 
 	m.committedIndex = m.committedOffset / (messageLen + maxMessageSize)

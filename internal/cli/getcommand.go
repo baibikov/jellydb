@@ -18,6 +18,8 @@ const (
 	keyIndex     = 0
 	messageIndex = 1
 	nIndex       = 1
+
+	messageSize = 256
 )
 
 type getcommand struct {
@@ -62,7 +64,7 @@ func (g *getcommand) exec() error {
 	}
 
 	resp := &messages.GetResponse{}
-	err = protomarshal.NewEncoder(g.conn, 256).Encode(resp)
+	err = protomarshal.NewEncoder(g.conn, messageSize).Encode(resp)
 	if err != nil {
 		return errors.Wrapf(err, "%s read data from tcp server", getCommand)
 	}
@@ -86,7 +88,7 @@ func (g *getcommand) ping() error {
 
 func readResponse(conn net.Conn) error {
 	mm := &messages.Response{}
-	err := protomarshal.NewEncoder(conn, 256).Encode(mm)
+	err := protomarshal.NewEncoder(conn, messageSize).Encode(mm)
 	if err != nil {
 		return errors.Wrapf(err, "%s read message from tcp server", getCommand)
 	}
