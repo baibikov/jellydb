@@ -57,6 +57,9 @@ func runApp(f *Flags) (err error) {
 
 	go func() {
 		c.Run(ctx)
+
+		// close app CLI after exit
+		cancel()
 	}()
 	<-ctx.Done()
 	return nil
