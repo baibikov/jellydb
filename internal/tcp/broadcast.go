@@ -12,6 +12,7 @@ import (
 
 	"github.com/baibikov/jellydb/internal/pkg/jell"
 	"github.com/baibikov/jellydb/pkg/protomarshal"
+	"github.com/baibikov/jellydb/pkg/routing"
 	"github.com/baibikov/jellydb/protogenerated/messages"
 )
 
@@ -31,7 +32,12 @@ func (s *Server) Broadcast(ctx context.Context) error {
 			}
 
 			go func() {
-				if err := newhandler(conn, s.jelly).do(ctx); err != nil {
+				err := newhandler(conn, s.jelly).do(ctx)
+				if isSysError(err) {
+					logrus.Info("close connection")
+					return
+				}
+				if err != nil {
 					logrus.Error(err)
 				}
 			}()
@@ -64,7 +70,7 @@ const (
 
 func (h *handler) do(ctx context.Context) (err error) {
 	defer func() {
-		tryClose(h.conn, err, "do")
+		tryClose(h.conn, "do")
 	}()
 
 	for {
@@ -72,38 +78,37 @@ func (h *handler) do(ctx context.Context) (err error) {
 		case <-ctx.Done():
 			return nil
 		default:
-		}
-
-		bb := make([]byte, pingMessageSize)
-		n, err := h.conn.Read(bb)
-		if err != nil {
-			return errors.Wrap(err, "read ping message")
-		}
-		if n == 0 {
-			return errors.New("ping message empty")
-		}
-
-		typ, err := strconv.Atoi(string(bb))
-		if err != nil {
-			return errors.Wrapf(err, "string unfolding - %s", string(bb))
-		}
-
-		logrus.Debugf("processing message by type - %d", typ)
-
-		switch typ {
-		case setMessageType:
-			err = h.set()
-		case getMessageType:
-			err = h.get()
-		case commitMessageType:
-			err = h.commit()
-		default:
-			return errors.Errorf("undefined message type - %d", typ)
-		}
-		if err != nil {
-			logrus.Error(err)
+			if err := h.distribute(); err != nil {
+				logrus.Error(err)
+			}
 		}
 	}
+}
+
+func (h *handler) distribute() error {
+	bb := make([]byte, pingMessageSize)
+	n, err := h.conn.Read(bb)
+	if err != nil {
+		return errors.Wrap(err, "read ping message")
+	}
+	if n == 0 {
+		return errors.New("ping message empty")
+	}
+
+	typ, err := strconv.Atoi(string(bb))
+	if err != nil {
+		return errors.Wrapf(err, "string unfolding - %s", bb)
+	}
+
+	logrus.Debugf("processing message by type - %d", typ)
+
+	route := routing.New(map[comparable]routing.HandlerFunc{
+		setMessageType:    h.set,
+		getMessageType:    h.get,
+		commitMessageType: h.commit,
+	})
+
+	return route.Distribute(typ)
 }
 
 const (
@@ -111,7 +116,7 @@ const (
 	StatusCodeBad = 50
 )
 
-func tryClose(conn net.Conn, err error, space string) {
+func tryClose(conn net.Conn, space string) {
 	if v := recover(); v != any(nil) {
 		logrus.Errorf("space %s rec error: %+v", space, v)
 	}
