@@ -23,7 +23,7 @@ type Store struct {
 	mutex  sync.RWMutex
 	config *Config
 
-	mpstate map[string]*message
+	subject *subject
 }
 
 func New(config *Config) (*Store, error) {
@@ -36,32 +36,26 @@ func New(config *Config) (*Store, error) {
 
 	return &Store{
 		config:  config,
-		mpstate: map[string]*message{},
+		subject: &subject{},
 	}, nil
 }
 
 func (s *Store) Get(key string, n int64) ([][]byte, error) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	v, ok := s.mpstate[key]
-	if !ok || v == nil {
-		return nil, errors.Errorf("store has not key %s", key)
+	m, err := s.subject.load(key)
+	if err != nil {
+		return nil, err
 	}
 
-	return v.batch(n), nil
+	return m.batch(n), nil
 }
 
 func (s *Store) Commit(key string, n int64) error {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
-	v, ok := s.mpstate[key]
-	if !ok || v == nil {
-		return errors.Errorf("store has not key %s", key)
+	m, err := s.subject.load(key)
+	if err != nil {
+		return err
 	}
 
-	v.commit(n)
+	m.commit(n)
 	return nil
 }
 
@@ -69,40 +63,23 @@ func (s *Store) Set(key string, value []byte) error {
 	if len(value) == 0 {
 		return nil
 	}
-
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	v, ok := s.mpstate[key]
-	if !ok {
-		nm := newMessage()
-		s.mpstate[key] = nm
-		v = s.mpstate[key]
-	}
-
-	return v.append(value)
+	return s.subject.store(key).append(value)
 }
 
 func (s *Store) setWrittenOffset(key string, wo, co int64) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	v, ok := s.mpstate[key]
-	if !ok {
-		nm := newMessage()
-		s.mpstate[key] = nm
-		v = nm
-	}
-
-	v.writtenOffset = wo
-	v.committedOffset = co
+	m := s.subject.store(key)
+	m.writtenOffset = wo
+	m.committedOffset = co
 
 	if wo == co {
-		v.writtenIndex = 0
+		m.writtenIndex = 0
 		return
 	}
 
-	if wo > co {
-		// offset shift by commented offset with written offset
-		v.writtenIndex = (wo - co) / (messageLen + maxMessageSize)
+	if wo < co {
 		return
 	}
+
+	// offset shift by commented offset with written offset
+	m.writtenIndex = (wo - co) / (messageLen + maxMessageSize)
 }

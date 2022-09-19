@@ -28,29 +28,21 @@ func (s *Store) Unload(ctx context.Context) error {
 }
 
 func (s *Store) unload(ctx context.Context) error {
-	messages := make(map[string]*message, len(s.mpstate))
-
-	// try map use for parallel requests
-	s.mutex.Lock()
-	for k, v := range s.mpstate {
-		messages[k] = v
-	}
-	s.mutex.Unlock()
-
 	// iterate over all message values that
 	// are present and load only unloaded messages
-	for key, v := range messages {
+	return s.subject.srange(func(key string, value *message) error {
 		select {
 		case <-ctx.Done():
 			return errors.New("failed to upload all file data")
 		default:
-			if err := s.unloadByFile(key, v); err != nil {
+			err := s.unloadByFile(key, value)
+			if err != nil {
 				return errors.Wrapf(err, "unload by key - %s", key)
 			}
 		}
-	}
 
-	return nil
+		return nil
+	})
 }
 
 func (s *Store) unloadByFile(key string, m *message) (err error) {
