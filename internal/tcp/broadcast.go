@@ -102,7 +102,7 @@ func (h *handler) distribute() error {
 
 	logrus.Debugf("processing message by type - %d", typ)
 
-	route := routing.New(map[comparable]routing.HandlerFunc{
+	route := routing.New(map[interface{}]routing.HandlerFunc{
 		setMessageType:    h.set,
 		getMessageType:    h.get,
 		commitMessageType: h.commit,
