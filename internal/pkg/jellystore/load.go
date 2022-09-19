@@ -76,10 +76,6 @@ const (
 )
 
 func (s *Store) loadByFile(key string) (err error) {
-	if s.mpstate == nil {
-		return nil
-	}
-
 	// usable path by db data
 	pdata := fmt.Sprintf("%s/%s/%s", s.config.Path, key, logFileName)
 
@@ -113,11 +109,10 @@ func (s *Store) loadByFile(key string) (err error) {
 	for {
 		bb := make([]byte, maxMessageSize+messageLen)
 		_, err = dataFile.ReadAt(bb, iteration)
+		if errors.Is(err, io.EOF) {
+			break
+		}
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-
 			return errors.Wrapf(err, "read messages by key %s from path %s", key, pdata)
 		}
 
