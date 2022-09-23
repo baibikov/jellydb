@@ -59,6 +59,10 @@ func (o offsetType) uint32() uint32 {
 	return uint32(o)
 }
 
+func (o offsetType) equal(u offsetType) bool {
+	return o == u
+}
+
 func (o offsetType) int64() int64 {
 	return int64(o)
 }

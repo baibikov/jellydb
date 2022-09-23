@@ -78,10 +78,10 @@ func (s *Store) unloadByFile(key string, m *message) (err error) {
 	}
 	defer multierr.AppendInvoke(&err, multierr.Close(logInfo))
 
-	// convert the committed messages to the final offset
 	newCommittedOffset := m.committedOffset
-	for i := m.committedIndex; i < m.lastCommitIndex; i++ {
-		newCommittedOffset += maxMessageSize + messageLen
+	if m.committedIndex != m.lastCommitIndex {
+		// convert the committed messages to the final offset
+		newCommittedOffset += (maxMessageSize + messageLen) * (m.lastCommitIndex - m.committedIndex)
 	}
 
 	// convert the written messages to the final offset

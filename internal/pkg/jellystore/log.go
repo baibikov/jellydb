@@ -14,6 +14,7 @@
 package jellystore
 
 import (
+	"io"
 	"os"
 
 	"github.com/pkg/errors"
@@ -38,6 +39,15 @@ func openLog(path string) (*log, error) {
 
 func (l *log) Close() error {
 	return l.file.Close()
+}
+
+func (l *log) readAt(b []byte, off int64) (n int, err error) {
+	_, err = l.file.ReadAt(b, off)
+	if errors.Is(err, io.EOF) {
+		return 0, io.EOF
+	}
+
+	return 0, err
 }
 
 func (l *log) write(bb []byte) error {

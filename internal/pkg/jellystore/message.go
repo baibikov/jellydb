@@ -13,7 +13,9 @@
 */
 package jellystore
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 type message struct {
 	queue            [][]byte
@@ -64,7 +66,7 @@ func (m *message) commit(n int64) {
 	}
 
 	// commit message with next batch
-	m.lastCommitIndex = m.lastCommitIndex + 1 + n - 1
+	m.lastCommitIndex = m.lastCommitIndex + n
 }
 
 func (m *message) batch(n int64) [][]byte {
