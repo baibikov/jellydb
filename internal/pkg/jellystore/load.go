@@ -96,19 +96,22 @@ func (s *Store) loadByFile(key string) (err error) {
 	}
 
 	s.setWrittenOffset(key, writtenOffset.int64(), committedOffset.int64())
-	if committedOffset.uint32() == writtenOffset.uint32() {
+
+	// don't load if committed and written offsets equal
+	if committedOffset.equal(writtenOffset) {
 		return nil
 	}
 
-	dataFile, err := os.OpenFile(pdata, os.O_RDONLY, os.ModePerm)
+	logInfo, err := openLog(pdata)
 	if err != nil {
-		return errors.Wrap(err, "open data file")
+		return err
 	}
+	defer multierr.AppendInvoke(&err, multierr.Close(logInfo))
 
 	iteration := int64(committedOffset)
 	for {
 		bb := make([]byte, maxMessageSize+messageLen)
-		_, err = dataFile.ReadAt(bb, iteration)
+		_, err = logInfo.readAt(bb, iteration)
 		if errors.Is(err, io.EOF) {
 			break
 		}

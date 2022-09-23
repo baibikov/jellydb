@@ -1,6 +1,6 @@
 # Jellydb in-memory NoSQL message database.
 [![Licence](https://img.shields.io/badge/License-Apache2-blue.svg?style=flat-square)](https://en.wikipedia.org/wiki/Apache_License)
-[![GitHub release](https://img.shields.io/github/release/baibikov/jellyfish.svg?style=flat-square)](https://https://github.com/baibikov/jellydb/releases/latest)
+[![GitHub release](https://img.shields.io/github/release/baibikov/jellydb.svg?style=flat-square)](https://https://github.com/baibikov/jellydb/releases/latest)
 [![Build Status](https://img.shields.io/github/workflow/status/baibikov/jellydb/Go?logo=github&style=flat-square)](https://github.com/baibikov/jellydb/actions?query=workflow)
 [![PkgGoDev](https://img.shields.io/badge/go.dev-docs-007d9c?style=flat-square&logo=go&logoColor=white)](https://pkg.go.dev/github.com/baibikov/jellydb)
 [![Go Report Card](https://goreportcard.com/badge/github.com/baibikov/jellydb?style=flat-square)](https://goreportcard.com/report/github.com/baibikov/jellydb)

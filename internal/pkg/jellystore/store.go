@@ -36,7 +36,7 @@ func New(config *Config) (*Store, error) {
 
 	return &Store{
 		config:  config,
-		subject: &subject{},
+		subject: new(subject),
 	}, nil
 }
 
